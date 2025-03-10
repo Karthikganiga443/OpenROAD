@@ -29,12 +29,8 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-
 #include "dbBPin.h"
-
 #include <iostream>
-#include <vector>
-
 #include "dbAccessPoint.h"
 #include "dbBTerm.h"
 #include "dbBlock.h"
@@ -45,11 +41,8 @@
 #include "dbTable.hpp"
 #include "odb/db.h"
 #include "odb/dbBlockCallBackObj.h"
-
 namespace odb {
-
 template class dbTable<_dbBPin>;
-
 _dbBPin::_dbBPin(_dbDatabase*)
 {
   _flags._status = dbPlacementStatus::NONE;
@@ -59,7 +52,6 @@ _dbBPin::_dbBPin(_dbDatabase*)
   _min_spacing = 0;
   _effective_width = 0;
 }
-
 _dbBPin::_dbBPin(_dbDatabase*, const _dbBPin& p)
     : _flags(p._flags),
       _bterm(p._bterm),
@@ -70,48 +62,65 @@ _dbBPin::_dbBPin(_dbDatabase*, const _dbBPin& p)
       aps_(p.aps_)
 {
 }
-
 bool _dbBPin::operator==(const _dbBPin& rhs) const
 {
   if (_flags._status != rhs._flags._status) {
     return false;
   }
-
   if (_flags._has_min_spacing != rhs._flags._has_min_spacing) {
     return false;
   }
-
   if (_flags._has_effective_width != rhs._flags._has_effective_width) {
     return false;
   }
-
   if (_bterm != rhs._bterm) {
     return false;
   }
-
   if (_boxes != rhs._boxes) {
     return false;
   }
-
   if (_next_bpin != rhs._next_bpin) {
     return false;
   }
-
   if (_min_spacing != rhs._min_spacing) {
     return false;
   }
-
   if (_effective_width != rhs._effective_width) {
     return false;
   }
-
   if (aps_ != rhs.aps_) {
     return false;
   }
-
   return true;
 }
-
+void _dbBPin::differences(dbDiff& diff,
+                          const char* field,
+                          const _dbBPin& rhs) const
+{
+  DIFF_BEGIN
+  DIFF_FIELD(_flags._status);
+  DIFF_FIELD(_flags._has_min_spacing);
+  DIFF_FIELD(_flags._has_effective_width);
+  DIFF_FIELD(_bterm);
+  DIFF_FIELD(_boxes);
+  DIFF_FIELD(_next_bpin);
+  DIFF_FIELD(_min_spacing);
+  DIFF_FIELD(_effective_width);
+  DIFF_END
+}
+void _dbBPin::out(dbDiff& diff, char side, const char* field) const
+{
+  DIFF_OUT_BEGIN
+  DIFF_OUT_FIELD(_flags._status);
+  DIFF_OUT_FIELD(_flags._has_min_spacing);
+  DIFF_OUT_FIELD(_flags._has_effective_width);
+  DIFF_OUT_FIELD(_bterm);
+  DIFF_OUT_FIELD(_boxes);
+  DIFF_OUT_FIELD(_next_bpin);
+  DIFF_OUT_FIELD(_min_spacing);
+  DIFF_OUT_FIELD(_effective_width);
+  DIFF_END
+}
 dbOStream& operator<<(dbOStream& stream, const _dbBPin& bpin)
 {
   uint* bit_field = (uint*) &bpin._flags;
@@ -122,10 +131,8 @@ dbOStream& operator<<(dbOStream& stream, const _dbBPin& bpin)
   stream << bpin._min_spacing;
   stream << bpin._effective_width;
   stream << bpin.aps_;
-
   return stream;
 }
-
 dbIStream& operator>>(dbIStream& stream, _dbBPin& bpin)
 {
   uint* bit_field = (uint*) &bpin._flags;
@@ -136,31 +143,25 @@ dbIStream& operator>>(dbIStream& stream, _dbBPin& bpin)
   stream >> bpin._min_spacing;
   stream >> bpin._effective_width;
   stream >> bpin.aps_;
-
   return stream;
 }
-
 ////////////////////////////////////////////////////////////////////
 //
 // dbBPin - Methods
 //
 ////////////////////////////////////////////////////////////////////
-
 dbBTerm* dbBPin::getBTerm() const
 {
   _dbBPin* pin = (_dbBPin*) this;
   _dbBlock* block = (_dbBlock*) pin->getOwner();
   return (dbBTerm*) block->_bterm_tbl->getPtr(pin->_bterm);
 }
-
 dbSet<dbBox> dbBPin::getBoxes()
 {
   _dbBPin* pin = (_dbBPin*) this;
-
   _dbBlock* block = (_dbBlock*) pin->getOwner();
   return dbSet<dbBox>(pin, block->_box_itr);
 }
-
 Rect dbBPin::getBBox()
 {
   Rect bbox;
@@ -171,13 +172,11 @@ Rect dbBPin::getBBox()
   }
   return bbox;
 }
-
 dbPlacementStatus dbBPin::getPlacementStatus()
 {
   _dbBPin* bpin = (_dbBPin*) this;
   return dbPlacementStatus(bpin->_flags._status);
 }
-
 void dbBPin::setPlacementStatus(dbPlacementStatus status)
 {
   _dbBPin* bpin = (_dbBPin*) this;
@@ -185,45 +184,38 @@ void dbBPin::setPlacementStatus(dbPlacementStatus status)
   _dbBlock* block = (_dbBlock*) bpin->getOwner();
   block->_flags._valid_bbox = 0;
 }
-
 bool dbBPin::hasEffectiveWidth()
 {
   _dbBPin* bpin = (_dbBPin*) this;
   return bpin->_flags._has_effective_width == 1U;
 }
-
 void dbBPin::setEffectiveWidth(int w)
 {
   _dbBPin* bpin = (_dbBPin*) this;
   bpin->_flags._has_effective_width = 1U;
   bpin->_effective_width = w;
 }
-
 int dbBPin::getEffectiveWidth()
 {
   _dbBPin* bpin = (_dbBPin*) this;
   return bpin->_effective_width;
 }
-
 bool dbBPin::hasMinSpacing()
 {
   _dbBPin* bpin = (_dbBPin*) this;
   return bpin->_flags._has_min_spacing == 1U;
 }
-
 void dbBPin::setMinSpacing(int w)
 {
   _dbBPin* bpin = (_dbBPin*) this;
   bpin->_flags._has_min_spacing = 1U;
   bpin->_min_spacing = w;
 }
-
 int dbBPin::getMinSpacing()
 {
   _dbBPin* bpin = (_dbBPin*) this;
   return bpin->_min_spacing;
 }
-
 std::vector<dbAccessPoint*> dbBPin::getAccessPoints() const
 {
   _dbBPin* bpin = (_dbBPin*) this;
@@ -234,7 +226,6 @@ std::vector<dbAccessPoint*> dbBPin::getAccessPoints() const
   }
   return aps;
 }
-
 dbBPin* dbBPin::create(dbBTerm* bterm_)
 {
   _dbBTerm* bterm = (_dbBTerm*) bterm_;
@@ -248,7 +239,6 @@ dbBPin* dbBPin::create(dbBTerm* bterm_)
   }
   return (dbBPin*) bpin;
 }
-
 void dbBPin::destroy(dbBPin* bpin_)
 {
   _dbBPin* bpin = (_dbBPin*) bpin_;
@@ -274,7 +264,6 @@ void dbBPin::destroy(dbBPin* bpin_)
     prev = c;
     cur = c->_next_bpin;
   }
-
   dbId<_dbBox> nextBox = bpin->_boxes;
   while (nextBox) {
     _dbBox* b = block->_box_tbl->getPtr(nextBox);
@@ -291,7 +280,6 @@ void dbBPin::destroy(dbBPin* bpin_)
   dbProperty::destroyProperties(bpin);
   block->_bpin_tbl->destroy(bpin);
 }
-
 dbSet<dbBPin>::iterator dbBPin::destroy(dbSet<dbBPin>::iterator& itr)
 {
   dbBPin* bt = *itr;
@@ -299,19 +287,9 @@ dbSet<dbBPin>::iterator dbBPin::destroy(dbSet<dbBPin>::iterator& itr)
   destroy(bt);
   return next;
 }
-
 dbBPin* dbBPin::getBPin(dbBlock* block_, uint dbid_)
 {
   _dbBlock* block = (_dbBlock*) block_;
   return (dbBPin*) block->_bpin_tbl->getPtr(dbid_);
 }
-
-void _dbBPin::collectMemInfo(MemInfo& info)
-{
-  info.cnt++;
-  info.size += sizeof(*this);
-
-  info.children_["ap"].add(aps_);
-}
-
 }  // namespace odb
